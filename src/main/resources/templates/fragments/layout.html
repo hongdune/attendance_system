@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title, pageCss)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">좌석관리 시스템</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='70' x='0' y='10' rx='12' fill='%23FF6B00'/><rect width='40' height='10' x='30' y='85' rx='4' fill='%23FF6B00'/></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:if="${pageCss}" th:href="@{${pageCss}}">
+</head>
+<body>
+
+<!-- 페이지 공통 스크립트: 서버 설정 주입 → 라이브러리 → common.js -->
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        window.SEAT_CONFIG = JSON.parse(/*[[${seatConfigJson}]]*/ '{}');
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <script th:src="@{/js/common.js}"></script>
+</th:block>
+
+<!-- 공통 확인 모달 (SeatApp.confirmDialog 에서 사용) -->
+<div th:fragment="confirm-modal" class="modal-backdrop" id="confirmModal" hidden>
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="modal-header">
+            <h3 id="confirmTitle">확인</h3>
+            <button type="button" class="icon-btn" data-close aria-label="닫기"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMessage" class="confirm-message"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>취소</button>
+            <button type="button" class="btn btn-primary" id="confirmOk">확인</button>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="toast-container" class="toast-container" id="toastContainer" aria-live="polite"></div>
+</body>
+</html>

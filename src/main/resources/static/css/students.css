@@ -1,0 +1,124 @@
+.page-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.toolbar-left { min-width: 240px; }
+.toolbar-left .form-label { margin-bottom: 6px; }
+
+.batch-select-row {
+    display: flex;
+    gap: 8px;
+}
+
+.batch-select-row select { min-width: 200px; }
+
+.toolbar-right {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ===== 수강생 테이블 ===== */
+.table-wrap { overflow-x: auto; }
+
+.student-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 640px;
+}
+
+.student-table thead th {
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+.student-table thead th:first-child { border-top-left-radius: var(--radius-md); }
+.student-table thead th:last-child { border-top-right-radius: var(--radius-md); }
+
+.student-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.student-table tbody tr { transition: background .2s; }
+.student-table tbody tr:hover { background: #fffaf5; }
+.student-table tbody tr.flash { animation: rowFlash 1.2s ease-out; }
+.student-table tbody tr.giveup td { color: var(--text-muted); }
+
+.col-actions { width: 110px; text-align: center !important; }
+.student-table td.actions { text-align: center; white-space: nowrap; }
+
+.student-name { font-weight: 600; }
+
+.status-select {
+    min-width: 130px;
+    padding: 6px 10px;
+    border: 2px solid var(--status-color, var(--border));
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--status-color, var(--text));
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.status-select:disabled { opacity: .6; cursor: wait; }
+
+.time-cell { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+@keyframes rowFlash {
+    from { background: #ffedd5; }
+    to { background: transparent; }
+}
+
+/* ===== 일괄 등록 안내 ===== */
+.bulk-guide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.bulk-guide > div {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-muted);
+    font-size: .85rem;
+}
+
+.bulk-guide p { margin: 4px 0 8px; color: var(--text-muted); }
+
+.bulk-guide code, .form-hint code {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #fff7ed;
+    color: var(--primary-dark);
+    font-size: .82rem;
+}
+
+.bulk-guide > div > code { display: inline-block; line-height: 1.6; }
+
+@media (max-width: 640px) {
+    .toolbar { align-items: stretch; }
+    .toolbar-left, .batch-select-row select { min-width: 0; width: 100%; }
+    .toolbar-right .btn { flex: 1; }
+    .bulk-guide { grid-template-columns: 1fr; }
+}

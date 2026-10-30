@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('수강생 관리 - 좌석관리 시스템', '/css/students.css')}"></head>
+<body class="students-page">
+
+<header class="app-header">
+    <div class="container">
+        <h1 class="app-title"><i class="fas fa-users"></i> 수강생 관리</h1>
+        <div class="header-actions">
+            <span class="live-indicator" id="liveIndicator" th:if="${currentBatch != null}">
+                실시간 업데이트 <span class="live-dot"></span>
+            </span>
+            <a class="btn btn-ghost" th:href="@{/(batchName=${currentBatch?.name})}">
+                <i class="fas fa-arrow-left"></i> 좌석관리 시스템으로 돌아가기
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="container page-main">
+    <section class="card toolbar">
+        <div class="toolbar-left">
+            <label class="form-label" for="batchSelect">관리할 기수 선택</label>
+            <div class="batch-select-row">
+                <select id="batchSelect" class="form-control" th:disabled="${batches.isEmpty()}">
+                    <option th:if="${batches.isEmpty()}" value="">등록된 기수가 없습니다</option>
+                    <option th:each="b : ${batches}" th:value="${b.name}" th:text="${b.name}"
+                            th:selected="${currentBatch != null and b.id == currentBatch.id}">기수</option>
+                </select>
+                <button type="button" class="btn btn-danger" id="deleteBatchBtn" title="기수 삭제"
+                        th:disabled="${currentBatch == null}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button type="button" class="btn btn-primary" id="addBatchBtn"><i class="fas fa-plus"></i> 기수 추가</button>
+            <button type="button" class="btn btn-success" id="addStudentBtn" th:disabled="${currentBatch == null}">
+                <i class="fas fa-user-plus"></i> 수강생 추가
+            </button>
+            <button type="button" class="btn btn-brown" id="bulkBtn" th:disabled="${currentBatch == null}">
+                <i class="fas fa-file-import"></i> 일괄 등록
+            </button>
+        </div>
+    </section>
+
+    <section class="card" th:if="${currentBatch == null}">
+        <div class="empty-state">
+            <i class="fas fa-layer-group"></i>
+            <p>등록된 기수가 없습니다. <strong>기수 추가</strong> 버튼으로 먼저 기수를 만들어주세요.</p>
+        </div>
+    </section>
+
+    <section class="card" th:if="${currentBatch != null}">
+        <h2 class="card-title">
+            <span th:text="|${currentBatch.name} 수강생 목록|">기수 수강생 목록</span>
+            <span class="badge badge-primary" id="studentCount" th:text="|총 ${studentCount}명|">총 0명</span>
+        </h2>
+        <div class="table-wrap">
+            <table class="student-table">
+                <thead>
+                <tr>
+                    <th>이름</th>
+                    <th>위치</th>
+                    <th>현재 상태</th>
+                    <th>상태 변경 시간</th>
+                    <th class="col-actions">관리</th>
+                </tr>
+                </thead>
+                <tbody id="studentTableBody"></tbody>
+            </table>
+            <div class="empty-state" id="studentEmpty" hidden>
+                <i class="fas fa-user-graduate"></i>
+                <p>등록된 수강생이 없습니다. 수강생 추가 또는 일괄 등록을 이용해주세요.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- 수강생 추가 -->
+<div class="modal-backdrop" id="addStudentModal" hidden>
+    <form class="modal modal-sm" id="addStudentForm" novalidate>
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> 수강생 추가</h3>
+            <button type="button" class="icon-btn" data-close aria-label="닫기"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label" for="addName">이름</label>
+                <input type="text" class="form-control" id="addName" required autocomplete="off">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="addRow">행(Row)</label>
+                    <input type="number" class="form-control" id="addRow" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="addCol">열(Column)</label>
+                    <input type="number" class="form-control" id="addCol" min="1" required>
+                </div>
+            </div>
+            <p class="form-hint" id="addPositionHint"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>취소</button>
+            <button type="submit" class="btn btn-success">추가</button>
+        </div>
+    </form>
+</div>
+
+<!-- 수강생 정보 수정 -->
+<div class="modal-backdrop" id="editStudentModal" hidden>
+    <form class="modal modal-sm" id="editStudentForm" novalidate>
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> 수강생 정보 수정</h3>
+            <button type="button" class="icon-btn" data-close aria-label="닫기"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label" for="editName">이름</label>
+                <input type="text" class="form-control" id="editName" required autocomplete="off">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="editRow">행(Row)</label>
+                    <input type="number" class="form-control" id="editRow" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editCol">열(Column)</label>
+                    <input type="number" class="form-control" id="editCol" min="1" required>
+                </div>
+            </div>
+            <p class="form-hint" id="editPositionHint"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>취소</button>
+            <button type="submit" class="btn btn-primary">저장</button>
+        </div>
+    </form>
+</div>
+
+<!-- 일괄 등록 -->
+<div class="modal-backdrop" id="bulkModal" hidden>
+    <form class="modal modal-lg" id="bulkForm" novalidate>
+        <div class="modal-header">
+            <h3><i class="fas fa-file-import"></i> 수강생 일괄 등록</h3>
+            <button type="button" class="icon-btn" data-close aria-label="닫기"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="bulk-guide">
+                <div>
+                    <strong>방법 1 · 자동 배치</strong>
+                    <p>쉼표 또는 줄바꿈으로 이름을 구분하면 1행 1열부터 빈자리에 자동 배치합니다.</p>
+                    <code>홍길동, 김철수, 이영희</code>
+                </div>
+                <div>
+                    <strong>방법 2 · 직접 지정</strong>
+                    <p>줄마다 <code>이름, 행, 열</code> 형식으로 입력합니다.</p>
+                    <code>홍길동, 1, 1<br>김철수, 1, 2</code>
+                </div>
+            </div>
+            <p class="form-hint">첫 줄이 <code>이름, 숫자, 숫자</code> 형식이면 방법 2로 자동 인식합니다.
+                한 번에 최대 <span id="bulkMax">50</span>명, 이미 사용 중인 위치는 건너뜁니다.</p>
+            <div class="form-group">
+                <label class="form-label" for="bulkText">수강생 목록</label>
+                <textarea class="form-control" id="bulkText" rows="10" placeholder="홍길동, 김철수, 이영희"></textarea>
+                <p class="form-hint" id="bulkPreview"></p>
+            </div>
+            <ul class="error-list" id="bulkErrors" hidden></ul>
+            <ul class="warn-list" id="bulkSkipped" hidden></ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>닫기</button>
+            <button type="submit" class="btn btn-brown" id="bulkSubmit">등록</button>
+        </div>
+    </form>
+</div>
+
+<!-- 새 기수 추가 -->
+<div class="modal-backdrop" id="addBatchModal" hidden>
+    <form class="modal modal-sm" id="addBatchForm" novalidate>
+        <div class="modal-header">
+            <h3><i class="fas fa-layer-group"></i> 새 기수 추가</h3>
+            <button type="button" class="icon-btn" data-close aria-label="닫기"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label" for="batchName">기수명</label>
+                <input type="text" class="form-control" id="batchName" placeholder="예: 5기, 백엔드 1기, 프론트엔드 2기"
+                       maxlength="50" required autocomplete="off">
+                <p class="form-hint" id="batchNameHint">2~50자, 기존 기수와 중복될 수 없습니다.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>취소</button>
+            <button type="submit" class="btn btn-primary">추가</button>
+        </div>
+    </form>
+</div>
+
+<!-- 기수 삭제 확인 -->
+<div class="modal-backdrop" id="deleteBatchModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle" style="color: var(--danger)"></i> 기수 삭제</h3>
+            <button type="button" class="icon-btn" data-close aria-label="닫기"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p class="confirm-message" id="deleteBatchMessage"></p>
+            <p class="form-hint error" id="deleteBatchBlocked" hidden>먼저 모든 수강생을 삭제해주세요.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>취소</button>
+            <button type="button" class="btn btn-danger" id="deleteBatchConfirm">삭제</button>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: confirm-modal}"></div>
+<div th:replace="~{fragments/layout :: toast-container}"></div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/students.js}"></script>
+</body>
+</html>

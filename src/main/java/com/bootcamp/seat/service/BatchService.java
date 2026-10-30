@@ -13,6 +13,8 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class BatchService {
 
+    private static final String FORBIDDEN_NAME_CHARS = "/\\?#%";
+
     private final BatchRepository batchRepository;
     private final StudentRepository studentRepository;
 
@@ -50,6 +52,10 @@ public class BatchService {
         String name = rawName == null ? "" : rawName.strip();
         if (name.length() < Batch.NAME_MIN || name.length() > Batch.NAME_MAX) {
             throw SeatException.badRequest("기수명은 " + Batch.NAME_MIN + "~" + Batch.NAME_MAX + "자로 입력해주세요.");
+        }
+        // 기수명은 URL 경로와 WebSocket 토픽(/topic/batch/{batchName})에 그대로 쓰인다
+        if (name.chars().anyMatch(c -> FORBIDDEN_NAME_CHARS.indexOf(c) >= 0)) {
+            throw SeatException.badRequest("기수명에는 / \\ ? # % 문자를 사용할 수 없습니다.");
         }
         if (batchRepository.existsByName(name)) {
             throw SeatException.conflict("이미 존재하는 기수명입니다: " + name);
