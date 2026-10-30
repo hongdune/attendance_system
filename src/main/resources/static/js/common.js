@@ -43,6 +43,25 @@ const SeatApp = (() => {
         return data;
     }
 
+    /** 파일 다운로드. 서버 오류는 api() 와 같은 형태의 Error 로 던진다. */
+    async function download(url, fallbackName) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const data = safeJson(await response.text());
+            throw Object.assign(new Error((data && data.message) || '파일을 내려받지 못했습니다.'),
+                {status: response.status, details: (data && data.details) || []});
+        }
+        const disposition = response.headers.get('Content-Disposition') || '';
+        const match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const name = match ? decodeURIComponent(match[1]) : fallbackName;
+        const href = URL.createObjectURL(await response.blob());
+        const a = Object.assign(document.createElement('a'), {href, download: name});
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(href), 1000);
+    }
+
     function safeJson(text) {
         try {
             return JSON.parse(text);
@@ -269,7 +288,7 @@ const SeatApp = (() => {
     }
 
     return {
-        config, statusList, status, now, api, query, toast,
+        config, statusList, status, now, api, download, query, toast,
         openModal, closeModal, isAnyModalOpen, confirmDialog,
         formatDateTime, formatTime, formatShort, formatElapsed, elapsedMs, dangerLevel,
         escapeHtml, compareName, debounce, seatFromMessage, connectBatch, setLiveIndicator
