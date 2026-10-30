@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/seat}
+    username: ${DB_USERNAME:seat}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      # 첫 배포 후에는 validate 로 바꾸고 스키마 마이그레이션 도구(Flyway 등) 도입 권장
+      ddl-auto: ${DDL_AUTO:update}

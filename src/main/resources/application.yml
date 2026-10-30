@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: seat-management
+  profiles:
+    default: dev
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+  thymeleaf:
+    cache: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+seat:
+  # 서버가 시각을 만들고 해석하는 기준 시간대 (히스토리 필터·엑셀·타이머)
+  time-zone: Asia/Seoul
+  seed:
+    enabled: false
