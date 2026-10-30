@@ -22,6 +22,7 @@
 - `config/` — WebSocket, Clock, 샘플 데이터 시더
 - `src/main/resources/templates` — `index.html`(좌석 메인), `students.html`(수강생 관리), `fragments/`
 - `src/main/resources/static/js` — `common.js`(api 래퍼·토스트·모달·WS), `seat.js`, `students.js`
+- `scripts/windows/` — 설치·자동 실행(시작프로그램 바로가기)·시작·종료·제거 스크립트. Windows PowerShell 5.1 호환을 위해 **UTF-8 BOM + CRLF**로 저장할 것(BOM 이 없으면 한글이 깨져 파싱 오류)
 
 ## 반드시 지킬 규칙
 - **상태 enum**: `IN, OUT, WC, SMOKE, STORE, ABSENT, LATE, OUT_OFFICE, LUNCH, GIVEUP`. 라벨·색·아이콘·타이머/위험 기준은 `SeatStatus`에만 정의하고, 템플릿이 `window.SEAT_CONFIG`로 JS에 내려준다. JS에 상태 메타데이터를 하드코딩하지 말 것.

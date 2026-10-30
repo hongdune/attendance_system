@@ -18,6 +18,9 @@
 
 ## 실행 방법
 
+> 강의실 PC에 설치해서 로그인할 때 자동으로 켜지게 하려면 아래 [다른 컴퓨터에 설치하고 로그인 시 자동 실행하기](#다른-컴퓨터에-설치하고-로그인-시-자동-실행하기-windows)를 보세요.
+> 이 절은 개발용 실행 방법입니다.
+
 ### 준비
 - **JDK 17 이상**이 필요합니다. `java -version`으로 확인하고, 없으면 [Temurin 17](https://adoptium.net/temurin/releases/?version=17)을 설치하세요.
 - 브라우저에서 CDN(cdnjs, jsdelivr)에 접속할 수 있어야 아이콘·폰트·WebSocket 라이브러리가 로드됩니다.
@@ -67,6 +70,87 @@ java -jar target/seat-management-0.1.0-SNAPSHOT.jar --spring.profiles.active=mys
 ./mvnw test
 ```
 핵심 서비스 단위 테스트 25개(상태 변경 + 히스토리 기록, 좌석 중복, 스왑, 일괄 등록 파싱 등)가 실행됩니다.
+
+## 다른 컴퓨터에 설치하고 로그인 시 자동 실행하기 (Windows)
+
+강의실 PC처럼 **컴퓨터를 켜고 로그인하면 콘솔 창 없이 서버가 뜨고 브라우저가 http://localhost:8080 을 여는** 구성입니다.
+`scripts/windows/install.ps1` 하나로 빌드·설치·자동 실행 등록까지 끝납니다.
+
+### 1. 준비물
+- Git
+- JDK 17 이상. 없으면 아래 명령으로 설치하거나, 3단계에서 `-InstallJdk` 옵션을 주면 스크립트가 winget으로 설치합니다.
+  ```powershell
+  winget install EclipseAdoptium.Temurin.17.JDK
+  ```
+- 관리자 권한은 필요 없습니다.
+
+### 2. 소스 받기
+```powershell
+git clone https://github.com/hongdune/attendance_system.git
+cd attendance_system
+```
+
+### 3. 설치 + 자동 실행 등록
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\windows\install.ps1
+```
+스크립트는 다음을 순서대로 합니다.
+1. JDK 17 이상을 찾습니다(`JAVA_HOME` → `PATH` → `C:\Program Files\Eclipse Adoptium` 등).
+2. jar를 빌드합니다. 처음에는 Maven과 라이브러리를 내려받느라 몇 분 걸립니다.
+3. 실행 중인 서버를 멈추고 `C:\SeatSystem`에 jar와 실행 스크립트를 복사합니다.
+4. **시작프로그램**에 `좌석관리 시스템` 바로가기를 만듭니다(`Win+R` → `shell:startup` 폴더).
+5. 바로 한 번 실행해 브라우저를 엽니다.
+
+다음 로그인부터는 서버가 자동으로 뜹니다. 보통 20초 안팎이 걸리고, 서버가 응답한 뒤에 브라우저가 열립니다.
+
+**설치 옵션** (여러 개 함께 사용 가능)
+
+| 옵션 | 설명 |
+|---|---|
+| `-InstallDir D:\Seat` | 설치 폴더 (기본 `C:\SeatSystem`). 출결 데이터도 이 폴더의 `data\`에 저장됩니다. |
+| `-Port 9090` | 사용할 포트 (기본 8080) |
+| `-NoSeed` | 샘플 데이터(AINLP5·BESP5)를 넣지 않음. **실제 운영용이면 권장**합니다. |
+| `-Kiosk` | 브라우저를 Edge 전체 화면 키오스크 모드로 엽니다(종료: `Alt+F4`). |
+| `-AllowLan` | 같은 네트워크의 다른 PC에서도 접속할 수 있게 엽니다. 이 앱에는 **로그인 기능이 없으므로** 신뢰할 수 있는 네트워크에서만 사용하세요. 처음 실행 때 Windows 방화벽 허용 창이 뜰 수 있습니다. |
+| `-InstallJdk` | JDK가 없으면 winget으로 Temurin 17을 설치합니다. |
+| `-NoStart` | 설치만 하고 지금 실행하지는 않습니다. |
+
+예: 운영용, 키오스크 모드
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\windows\install.ps1 -NoSeed -Kiosk
+```
+
+### 4. 평소 사용
+```powershell
+# 지금 끄기 / 켜기 (설치 폴더에 복사된 스크립트)
+powershell -ExecutionPolicy Bypass -File C:\SeatSystem\stop.ps1
+powershell -ExecutionPolicy Bypass -File C:\SeatSystem\start.ps1
+```
+- 끄기는 해당 포트를 쓰는 Java 프로세스만 종료합니다. IDE 같은 다른 Java 프로그램은 건드리지 않습니다.
+- 이미 켜져 있을 때 켜기를 실행하면 서버를 하나 더 띄우지 않고 브라우저만 엽니다.
+- 로그: `C:\SeatSystem\logs\seat.log`(서버), `C:\SeatSystem\logs\launcher.log`(자동 실행 스크립트)
+
+### 5. 업데이트
+```powershell
+cd attendance_system
+git pull
+powershell -ExecutionPolicy Bypass -File scripts\windows\install.ps1 -NoSeed   # 처음 설치 때와 같은 옵션으로
+```
+서버를 멈추고 새 jar로 교체한 뒤 다시 켭니다. `data\` 폴더(출결 데이터)는 그대로 유지됩니다.
+
+### 6. 자동 실행 해제
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\windows\uninstall.ps1              # 프로그램만 삭제, 데이터·로그 유지
+powershell -ExecutionPolicy Bypass -File scripts\windows\uninstall.ps1 -RemoveData  # 출결 데이터까지 모두 삭제
+```
+설치 때 `-InstallDir`이나 `-Port`를 바꿨다면 여기에도 같은 값을 주세요.
+
+### 참고
+- **백업**: 출결 기록은 `C:\SeatSystem\data\seatdb.mv.db` 파일 하나에 들어 있습니다. 서버를 끄고 이 파일을 복사해 두면 됩니다.
+- **로그인 없이 바로 켜지게**: 전원만 켜면 열리게 하려면 Windows 자동 로그인(`Win+R` → `netplwiz`)을 설정해야 합니다. PC를 누구나 쓸 수 있게 되므로 강의실 전용 PC에서만 권장합니다.
+- **창 깜박임**: 로그인 직후 PowerShell 창이 잠깐(최소화 상태로) 나타났다가 사라질 수 있습니다. 서버 자체는 콘솔 창 없이(`javaw`) 실행됩니다.
+- **포트 충돌**: 다른 프로그램이 이미 8080을 쓰고 있으면 `-Port`로 다른 포트를 지정하세요.
+- **macOS/Linux**는 자동 실행 스크립트를 제공하지 않습니다. 위의 "운영 DB"처럼 jar를 빌드해 `java -jar`로 실행하세요.
 
 ## API 요약
 
