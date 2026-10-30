@@ -27,7 +27,7 @@
 - **상태 enum**: `IN, OUT, WC, SMOKE, STORE, ABSENT, LATE, OUT_OFFICE, LUNCH, GIVEUP`. 라벨·색·아이콘·타이머/위험 기준은 `SeatStatus`에만 정의하고, 템플릿이 `window.SEAT_CONFIG`로 JS에 내려준다. JS에 상태 메타데이터를 하드코딩하지 말 것.
 - **그리드 크기**: `SeatGrid.ROWS=11`, `SeatGrid.COLS=12`. 프론트도 `SEAT_CONFIG.gridRows/gridCols`만 사용.
 - **상태 변경 = History 1건 + 브로드캐스트**. 개별·점심시간·전체퇴실 모두 `SeatStatusService`를 거친다. 상태를 바꾸는 코드를 다른 곳에 새로 만들지 말 것.
-- 브로드캐스트는 `SeatChangedEvent`를 발행 → `SeatEventPublisher`가 **커밋 후** `/topic/batch/{batchName}`로 전송. `SimpMessagingTemplate`를 서비스에서 직접 호출하지 말 것.
+- 브로드캐스트는 `SeatChangedEvent`를 발행 → `SeatEventBroadcaster`가 **커밋 후** `/topic/batch/{batchName}`로 전송. `SimpMessagingTemplate`를 서비스에서 직접 호출하지 말 것.
 - 타이머/위험 판정 기준은 `statusChangedAt`. WC/SMOKE/STORE 10분, OUT_OFFICE 2시간(1시간 30분부터 경고).
 - GIVEUP: 위치 (0,0), 회의실 해제, 배치도에서 숨김(가나다순 목록에는 회색 표시). LUNCH 좌석 클릭 = 즉시 IN.
 - 같은 기수 안 (row, col) 중복 금지 — 서버에서 검증(`StudentService`). 위치를 바꾸는 작업은 `BatchRepository.findByIdForUpdate`로 기수 행을 잠근 뒤 검증한다.
